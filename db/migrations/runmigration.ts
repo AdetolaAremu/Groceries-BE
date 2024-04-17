@@ -14,7 +14,6 @@ const db = new pg.Pool({
 const runDbMigrations = async () => {
   console.log('BEGIN DB MIGRATION');
 
-  // use single client forn transactions
   const client = await db.connect()
 
   try {

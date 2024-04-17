@@ -4,6 +4,7 @@ import { createProductValidator } from "../validators/ProductValidator";
 
 const router = Router();
 
-router.post("/", createProductValidator, ProductController.createProduct);
+router.route("/").post(createProductValidator, ProductController.createProduct).get(ProductController.findAll);
+router.route("/:id").get(ProductController.findOne).patch(ProductController.updateOne);
 
 export default router;

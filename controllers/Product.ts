@@ -7,11 +7,19 @@ interface IProduct {
   productName: string;
   barCode?: string;
   quantity?: number,
-  
 }
 
-export const createProduct = async (req: Request, res: Response) => {
+interface RequestQuery {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  search?: string
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+const createProduct = async (req: Request, res: Response) => {
   const errors = validationResult(req);
+  
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
@@ -21,73 +29,91 @@ export const createProduct = async (req: Request, res: Response) => {
   try {
     const query = `
       INSERT INTO
-          todos (brand, product_name, quantity, barcode)
+          products (brand, product_name, quantity, barcode)
       VALUES
           ($1, $2, $3, $4)
       RETURNING *
     `;
     const result = await db.query(query, [brand, productName, quantity, barCode]);
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      "status": "success",
+      "message": "Product created successfully",
+      "data": result.rows[0],
+    });
   } catch (error) {
-    console.error('Error inserting data into database:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-const findOne = async (id: string) => {
+const findOne = async (req: Request, res: Response) => {
     const query = `
         SELECT * FROM
-            todos
+            products
         WHERE
             id = $1
     ;`;
 
-    const result = await db.query(query, [+id]);
+    const result = await db.query(query, [req.params.id]);
 
-    return result.rows[0];
+    if (!result.rows) res.status(400).json({ 'status': 'fail', 'message': 'Product not found' }) 
+
+    return res.status(200).json({
+      "status": "success",
+      "message": "Product retrieved successfully",
+      "data": result.rows[0],
+    });
 }
 
-const findAll = async () => {
+const findAll = async (req:Request, res: Response) => {
+
+  const { page = 1, limit = 20, sortBy = 'id', sortOrder = 'ASC', search = '' } = req.query as RequestQuery;
+  const offset: number = (page - 1) * limit;
+
     const query = `
-        SELECT * FROM
-            todos
-    ;`;
+      SELECT * FROM products
+      WHERE product_name ILIKE $1 OR brand ILIKE $1
+      ORDER BY ${sortBy} ${sortOrder}
+      LIMIT $2 OFFSET $3
+    `;
 
-    const result = await db.query(query);
+    const params = [`%${search}%`, limit, offset];
 
-    return result.rows;
+    const result = await db.query(query, params);
+
+    res.status(200).json({
+      "status": "success",
+      "message": "Products retrieved successfully",
+      "data": result.rows,
+    });
 }
 
-const updateOne = async (id: string, { brand, productName }: IProduct) => {
-    const query = `
-        UPDATE
-            todos
-        SET
-            brand = $2,
-            productName = $3
-        WHERE
-            id = $1
-        RETURNING *
-    ;`;
+const updateOne = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { brand, productName, barCode, quantity } = req.body as IProduct;
 
-    const result = await db.query(query, [+id, brand, productName]);
+  const checkQuery = `
+    SELECT * FROM products WHERE id = $1
+  `;
 
-    return result.rows[0];
-}
+  const checkResult = await db.query(checkQuery, [id]);
 
-const deleteOne = async (id: string) => {
-    const query = `
-        DELETE FROM
-            todos
-        WHERE
-            id = $1
-        RETURNING *
-    ;`;
+  if (checkResult.rows.length === 0) return res.status(400).json({ 'status': 'fail', 'message': 'Product not found' });
 
-    const result = await db.query(query, [+id]);
+  const updateQuery = `
+    UPDATE products
+    SET brand = $2, product_name = $3, barcode = $4, quantity = $5
+    WHERE id = $1
+    RETURNING *
+  `;
 
-    return result.rows[0];
+  const updateResult = await db.query(updateQuery, [id, brand, productName, barCode, quantity]);
+
+  res.status(200).json({
+    "status": "success",
+    "message": "Product updated successfully",
+    "data": updateResult.rows[0]
+  });
 }
 
 export default {
@@ -95,5 +121,4 @@ export default {
     findOne,
     findAll,
     updateOne,
-    deleteOne,
 }
