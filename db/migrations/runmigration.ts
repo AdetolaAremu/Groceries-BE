@@ -1,7 +1,9 @@
-import pg from 'pg'
-import createProductsTable from './products';
+import pg from "pg";
+import createProductsTable from "./products";
 
-const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined;
+const port = process.env.DB_PORT
+  ? parseInt(process.env.DB_PORT, 10)
+  : undefined;
 
 const db = new pg.Pool({
   host: process.env.DB_HOST,
@@ -12,27 +14,27 @@ const db = new pg.Pool({
 });
 
 const runDbMigrations = async () => {
-  console.log('BEGIN DB MIGRATION');
+  console.log("BEGIN DB MIGRATION");
 
-  const client = await db.connect()
+  const client = await db.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     await client.query(createProductsTable);
 
-    await client.query('COMMIT')
+    await client.query("COMMIT");
 
-    console.log('END DB MIGRATION');
+    console.log("END DB MIGRATION");
   } catch (e) {
-    await client.query('ROLLBACK')
+    await client.query("ROLLBACK");
 
-    console.log('DB migration failed');
+    console.log("DB migration failed");
 
-    throw e
+    throw e;
   } finally {
-    client.release()
+    client.release();
   }
-}
+};
 
 export default runDbMigrations;

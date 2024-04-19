@@ -6,7 +6,7 @@ interface FieldsError extends Error {
   status: String;
   isOperational: boolean;
   code: number | string;
-  detail: string
+  detail: string;
 }
 
 const sendErrorProd = (err: FieldsError, req: Request, res: Response) => {
@@ -49,14 +49,13 @@ module.exports = (
   err.status = err.status || "error";
 
   if (process.env.NODE_ENV === "development") {
-    console.log(err,'error')
+    console.log(err, "error");
     sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === "production") {
     let error = { ...err };
     error.message = err.message;
     error.name = err.name;
-        
+
     sendErrorProd(error, req, res);
-    
   }
 };
