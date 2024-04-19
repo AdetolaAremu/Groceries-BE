@@ -34,6 +34,7 @@ const createProduct = async (req: Request, res: Response) => {
           ($1, $2, $3, $4)
       RETURNING *
     `;
+
     const result = await db.query(query, [
       brand,
       product_name,

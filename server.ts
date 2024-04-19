@@ -13,7 +13,7 @@ async function start() {
 
     await seedData(); // seed 20 product data
 
-    updateEnvFile(); // once a migration has ran before, don't seed again
+    updateEnvFile(); // once a migration has ran before, don't seed again and set migration completed to true
   }
 
   const port = process.env.PORT || 3001;

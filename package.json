@@ -27,7 +27,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec npx ts-node server.ts",
     "start:prod": "cross-env NODE_ENV=production nodemon server.ts",
-    "build": "tsc",
-    "seed": "npx ts-node ./db/migrations/seeds/ProductSeeder.ts"
+    "build": "tsc"
   }
 }
